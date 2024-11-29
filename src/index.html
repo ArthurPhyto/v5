@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Crawler de Domaines</title>
+    <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+    <h1>Multi-Crawler de Domaines</h1>
+    
+    <div class="crawl-form">
+        <input type="url" id="urlInput" placeholder="Entrez l'URL du site à analyser" required>
+        <button onclick="startNewCrawl()">Démarrer l'analyse</button>
+    </div>
+
+    <div id="crawlersContainer">
+        <!-- Les crawlers seront ajoutés ici dynamiquement -->
+    </div>
+
+    <template id="crawlerTemplate">
+        <div class="crawler-panel">
+            <div class="crawler-header">
+                <h2 class="crawler-url"></h2>
+                <span class="crawler-status"></span>
+            </div>
+            
+            <div class="stats">
+                <div class="stat-item">
+                    <span>URLs Crawlées</span>
+                    <span class="crawled-count">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>Sites Externes</span>
+                    <span class="external-count">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>Erreurs</span>
+                    <span class="error-count">0</span>
+                </div>
+            </div>
+
+            <div class="crawler-content">
+                <div class="panel">
+                    <h3>URLs Crawlées</h3>
+                    <div class="crawled-urls url-list"></div>
+                </div>
+                
+                <div class="panel">
+                    <h3>Sites Externes</h3>
+                    <div class="external-sites url-list"></div>
+                </div>
+
+                <div class="panel">
+                    <h3>Domaines Potentiellement Expirés</h3>
+                    <div class="expired-domains url-list"></div>
+                </div>
+            </div>
+
+            <div class="error-container"></div>
+        </div>
+    </template>
+
+    <script type="module" src="./js/client.js"></script>
+</body>
+</html>

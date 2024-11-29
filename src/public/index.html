@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crawler de Domaines Expirés</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .panel {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .url-list {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        .url-item {
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+            word-break: break-all;
+        }
+        .expired-domain {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .external-site {
+            color: #2980b9;
+        }
+        .error {
+            color: #e74c3c;
+            background-color: #fdf1f0;
+            padding: 5px;
+            margin: 5px 0;
+            border-radius: 4px;
+        }
+        .stats {
+            background: #34495e;
+            color: white;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        input[type="url"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .source-url {
+            font-size: 0.9em;
+            color: #666;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Crawler de Domaines Expirés</h1>
+    
+    <div>
+        <input type="url" id="urlInput" placeholder="Entrez l'URL de départ" required>
+        <button onclick="startCrawling()">Démarrer le crawl</button>
+    </div>
+
+    <div class="stats">
+        <div class="stat-item">
+            <span>URLs Crawlées:</span>
+            <span id="crawledCount">0</span>
+        </div>
+        <div class="stat-item">
+            <span>Sites Externes:</span>
+            <span id="externalCount">0</span>
+        </div>
+        <div class="stat-item">
+            <span>Erreurs:</span>
+            <span id="errorCount">0</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="panel">
+            <h2>URLs Crawlées</h2>
+            <div id="crawledUrls" class="url-list"></div>
+        </div>
+        
+        <div class="panel">
+            <h2>Sites Externes et Erreurs</h2>
+            <div id="externalSites" class="url-list"></div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        
+        function startCrawling() {
+            const url = document.getElementById('urlInput').value;
+            if (!url) {
+                alert('Veuillez entrer une URL valide');
+                return;
+            }
+            
+            // Nettoyer les listes
+            document.getElementById('crawledUrls').innerHTML = '';
+            document.getElementById('externalSites').innerHTML = '';
+            document.getElementById('crawledCount').textContent = '0';
+            document.getElementById('externalCount').textContent = '0';
+            document.getElementById('errorCount').textContent = '0';
+            
+            socket.emit('start-crawl', url);
+        }
+
+        socket.on('url-crawled', (url) => {
+            const div = document.createElement('div');
+            div.className = 'url-item';
+            div.textContent = url;
+            document.getElementById('crawledUrls').appendChild(div);
+            div.scrollIntoView({ behavior: 'smooth' });
+        });
+
+        socket.on('expired-domain', (domain) => {
+            const div = document.createElement('div');
+            div.className = 'url-item expired-domain';
+            div.textContent = `[EXPIRÉ] ${domain}`;
+            document.getElementById('externalSites').appendChild(div);
+            div.scrollIntoView({ behavior: 'smooth' });
+        });
+
+        socket.on('external-site', (data) => {
+            const div = document.createElement('div');
+            div.className = 'url-item external-site';
+            div.innerHTML = `${data.domain} (${data.url})`;
+            if (data.sourceUrl) {
+                div.innerHTML += `<div class="source-url">Source: ${data.sourceUrl}</div>`;
+            }
+            document.getElementById('externalSites').appendChild(div);
+        });
+
+        socket.on('crawl-error', (error) => {
+            const div = document.createElement('div');
+            div.className = 'url-item error';
+            div.textContent = `${error.url}: ${error.error}`;
+            document.getElementById('externalSites').appendChild(div);
+        });
+
+        socket.on('crawl-stats', (stats) => {
+            document.getElementById('crawledCount').textContent = stats.crawledCount;
+            document.getElementById('externalCount').textContent = stats.externalCount;
+            document.getElementById('errorCount').textContent = stats.errorCount || 0;
+        });
+
+        socket.on('error', (message) => {
+            alert(`Erreur: ${message}`);
+        });
+    </script>
+</body>
+</html>
